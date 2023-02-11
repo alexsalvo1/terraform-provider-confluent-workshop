@@ -2,7 +2,7 @@ terraform {
   required_providers {
     confluent = {
       source  = "confluentinc/confluent"
-      version = "1.0.0"
+      version = "1.29.0"
     }
   }
 }
@@ -14,6 +14,27 @@ provider "confluent" {
 
 resource "confluent_environment" "staging" {
   display_name = "Staging"
+}
+
+# Stream Governance and Kafka clusters can be in different regions as well as different cloud providers,
+# but you should to place both in the same cloud and region to restrict the fault isolation boundary.
+data "confluent_schema_registry_region" "essentials" {
+  cloud   = "AWS"
+  region  = "us-east-2"
+  package = "ESSENTIALS"
+}
+
+resource "confluent_schema_registry_cluster" "essentials" {
+  package = data.confluent_schema_registry_region.essentials.package
+
+  environment {
+    id = confluent_environment.staging.id
+  }
+
+  region {
+    # See https://docs.confluent.io/cloud/current/stream-governance/packages.html#stream-governance-regions
+    id = data.confluent_schema_registry_region.essentials.id
+  }
 }
 
 # Update the config to use a cloud provider and region of your choice.
@@ -36,7 +57,7 @@ resource "confluent_kafka_cluster" "basic" {
 // 'app-manager' service account is required in this configuration to create 'orders' topic and grant ACLs
 // to 'app-producer' and 'app-consumer' service accounts.
 resource "confluent_service_account" "app-manager" {
-  display_name = "app-manager-gcp"
+  display_name = "app-manager-salessandro-gcp-basic"
   description  = "Service account to manage 'inventory' Kafka cluster"
 }
 
@@ -47,7 +68,7 @@ resource "confluent_role_binding" "app-manager-kafka-cluster-admin" {
 }
 
 resource "confluent_api_key" "app-manager-kafka-api-key" {
-  display_name = "app-manager-kafka-api-key-gcp"
+  display_name = "app-manager-kafka-api-key-salessandro-gcp-basic"
   description  = "Kafka API Key that is owned by 'app-manager' service account"
   owner {
     id          = confluent_service_account.app-manager.id
@@ -90,12 +111,12 @@ resource "confluent_kafka_topic" "orders" {
 }
 
 resource "confluent_service_account" "app-consumer" {
-  display_name = "app-consumer-gcp"
+  display_name = "app-consumer-salessandro-gcp-basic"
   description  = "Service account to consume from 'orders' topic of 'inventory' Kafka cluster"
 }
 
 resource "confluent_api_key" "app-consumer-kafka-api-key" {
-  display_name = "app-consumer-kafka-api-key-gcp"
+  display_name = "app-consumer-kafka-api-key-salessandro-gcp-basic"
   description  = "Kafka API Key that is owned by 'app-consumer' service account"
   owner {
     id          = confluent_service_account.app-consumer.id
@@ -133,12 +154,12 @@ resource "confluent_kafka_acl" "app-producer-write-on-topic" {
 }
 
 resource "confluent_service_account" "app-producer" {
-  display_name = "app-producer-gcp"
+  display_name = "app-producer-salessandro-gcp-basic"
   description  = "Service account to produce to 'orders' topic of 'inventory' Kafka cluster"
 }
 
 resource "confluent_api_key" "app-producer-kafka-api-key" {
-  display_name = "app-producer-kafka-api-key-gcp"
+  display_name = "app-producer-kafka-api-key-salessandro-gcp-basic"
   description  = "Kafka API Key that is owned by 'app-producer' service account"
   owner {
     id          = confluent_service_account.app-producer.id

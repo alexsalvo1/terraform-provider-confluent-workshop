@@ -223,7 +223,7 @@ resource "confluent_kafka_acl" "app-consumer-read-on-group" {
 }
 
 resource "confluent_service_account" "app-connector" {
-  display_name = "app-connector"
+  display_name = "app-connector-salessandro"
   description  = "Service account of S3 Sink Connector to consume from 'orders' topic of 'inventory' Kafka cluster"
 }
 
