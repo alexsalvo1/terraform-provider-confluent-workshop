@@ -20,7 +20,7 @@ data "confluent_kafka_cluster" "source" {
 }
 
 resource "confluent_service_account" "app-manager-source-cluster" {
-  display_name = "app-manager-source-cluster"
+  display_name = "app-manager-source-cluster-salessandro"
   description  = "Service account to manage source Kafka cluster"
 }
 
@@ -35,7 +35,7 @@ resource "confluent_role_binding" "app-manager-source-cluster-admin" {
 }
 
 resource "confluent_api_key" "app-manager-source-cluster-api-key" {
-  display_name = "app-manager-source-cluster-api-key"
+  display_name = "app-manager-source-cluster-api-key-salessandro"
   description  = "Kafka API Key that is owned by 'app-manager-source-cluster' service account"
   owner {
     id          = confluent_service_account.app-manager-source-cluster.id
@@ -73,7 +73,7 @@ data "confluent_kafka_cluster" "destination" {
 }
 
 resource "confluent_service_account" "app-manager-destination-cluster" {
-  display_name = "app-manager-destination-cluster"
+  display_name = "app-manager-destination-cluster-salessandro"
   description  = "Service account to manage destination Kafka cluster"
 }
 
@@ -88,7 +88,7 @@ resource "confluent_role_binding" "app-manager-destination-cluster-admin" {
 }
 
 resource "confluent_api_key" "app-manager-destination-cluster-api-key" {
-  display_name = "app-manager-destination-cluster-api-key"
+  display_name = "app-manager-destination-cluster-api-key-salessandro"
   description  = "Kafka API Key that is owned by 'app-manager-destination-cluster' service account"
   owner {
     id          = confluent_service_account.app-manager-destination-cluster.id
@@ -122,6 +122,9 @@ resource "confluent_cluster_link" "source-outbound" {
   link_name       = var.cluster_link_name
   link_mode       = "SOURCE"
   connection_mode = "OUTBOUND"
+  config  = {
+    "cluster.link.prefix" = "true"
+  }
   source_kafka_cluster {
     id            = data.confluent_kafka_cluster.source.id
     rest_endpoint = data.confluent_kafka_cluster.source.rest_endpoint
@@ -149,6 +152,9 @@ resource "confluent_cluster_link" "destination-inbound" {
   link_name       = var.cluster_link_name
   link_mode       = "DESTINATION"
   connection_mode = "INBOUND"
+  config  = {
+    "cluster.link.prefix" = "source."
+  }
   destination_kafka_cluster {
     id            = data.confluent_kafka_cluster.destination.id
     rest_endpoint = data.confluent_kafka_cluster.destination.rest_endpoint
@@ -167,8 +173,8 @@ resource "confluent_cluster_link" "destination-inbound" {
 resource "confluent_kafka_mirror_topic" "test" {
   source_kafka_topic {
     topic_name = var.source_topic_name
-    mirror_topic_name = var.source_topic_name
   }
+  mirror_topic_name= "source.orders"
   cluster_link {
     link_name = confluent_cluster_link.source-outbound.link_name
   }
