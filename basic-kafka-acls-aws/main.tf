@@ -39,6 +39,10 @@ resource "confluent_schema_registry_cluster" "essentials" {
     # See https://docs.confluent.io/cloud/current/stream-governance/packages.html#stream-governance-regions
     id = data.confluent_schema_registry_region.essentials.id
   }
+
+  lifecycle {
+    prevent_destroy = true 
+  }
 }
 
 # Update the config to use a cloud provider and region of your choice.
