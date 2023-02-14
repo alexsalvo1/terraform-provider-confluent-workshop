@@ -14,6 +14,10 @@ provider "confluent" {
 
 resource "confluent_environment" "staging" {
   display_name = "Staging"
+
+  lifecycle {
+    prevent_destroy = true 
+  }
 }
 
 # Stream Governance and Kafka clusters can be in different regions as well as different cloud providers,
